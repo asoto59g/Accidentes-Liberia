@@ -483,38 +483,6 @@
     }
 }
 
-
-@media (max-width: 768px) {
-    .sidebar {
-        width: 92vw;
-        left: 4vw;
-        right: 4vw;
-        top: 10px;
-        bottom: 10px;
-        height: auto;
-        max-height: 90vh;
-        transform: scale(0.9);
-        transform-origin: top left;
-        overflow-y: auto;
-    }
-}
-
-
-/* FIX DEFINITIVO ANDROID */
-@media (max-width: 768px) {
-    .sidebar {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 85vw;
-        height: 100vh;
-        max-height: 100vh;
-        border-radius: 0 20px 20px 0;
-        transform: none !important;
-        overflow-y: auto;
-    }
-}
-
 </style>
 </head>
 <body>
@@ -541,7 +509,7 @@ justify-content:center;
 </button>
 
 
-    <aside class="sidebar" id="sidebar">
+    <aside class="sidebar collapsed" id="sidebar">
         <div class="sidebar-header">
             <div class="brand">
                 <div class="brand-logo">
@@ -860,7 +828,7 @@ justify-content:center;
 // Toggle sidebar
 const toggleBtn = document.getElementById('toggleSidebar');
 const sidebar = document.getElementById('sidebar');
-let sidebarVisible = true;
+let sidebarVisible = false;
 
 toggleBtn.onclick = () => {
     sidebarVisible = !sidebarVisible;

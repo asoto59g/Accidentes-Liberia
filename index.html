@@ -91,13 +91,12 @@
             z-index: 1;
         }
 
-        /* Sidebar */
         .sidebar {
             position: fixed;
             top: calc(var(--safe-top) + 16px);
             left: calc(var(--safe-left) + 16px);
             width: min(400px, calc(100vw - var(--safe-left) - var(--safe-right) - 32px));
-            height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 32px);
+            height: auto;
             max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 32px);
             background: var(--panel-bg);
             backdrop-filter: blur(var(--glass-blur));
@@ -107,6 +106,7 @@
             z-index: 100;
             display: flex;
             flex-direction: column;
+            justify-content: flex-start;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             transition: transform 0.32s ease, opacity 0.25s ease;
             overflow-y: auto;
@@ -122,7 +122,7 @@
         }
 
         .sidebar-header {
-            padding: 30px 26px 22px;
+            padding: 30px 26px 18px;
             background: linear-gradient(to bottom, rgba(255,255,255,0.03), transparent);
             flex-shrink: 0;
         }
@@ -160,7 +160,7 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 14px;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .stat-card {
@@ -203,7 +203,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
-            padding: 0 26px 18px;
+            padding: 0 26px 10px;
             flex-shrink: 0;
         }
 
@@ -235,7 +235,7 @@
             font-size: 0.82rem;
             font-weight: 600;
             color: var(--text-secondary);
-            margin-bottom: 14px;
+            margin-bottom: 10px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -244,8 +244,8 @@
         }
 
         .legend-container {
-            padding: 0 26px 18px;
-            margin-bottom: 6px;
+            padding: 0 26px 8px;
+            margin-bottom: 0;
             border-bottom: 1px solid var(--panel-border);
             flex-shrink: 0;
         }
@@ -281,29 +281,6 @@
             accent-color: var(--accent-primary);
         }
 
-  .brand-footer {
-    flex: 0 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 6px 8px calc(5px + var(--safe-bottom));
-    min-height: auto;
-    gap: 2px;
-}
-
-.brand-footer img {
-    max-width: 60px;
-    height: auto;
-    margin: 0;
-}
-
-.brand-footer p {
-    font-size: 0.52rem;
-    line-height: 1;
-    margin: 0;
-}
-
         .sev-dot {
             width: 10px;
             height: 10px;
@@ -314,6 +291,35 @@
         .sev-alta { background: var(--danger); }
         .sev-media { background: var(--warning); }
         .sev-baja { background: var(--success); }
+
+        .brand-footer {
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 10px calc(6px + var(--safe-bottom));
+            min-height: auto;
+            gap: 3px;
+        }
+
+        .brand-footer img {
+            max-width: 72px;
+            height: auto;
+            opacity: 0.9;
+            margin: 0;
+            display: block;
+        }
+
+        .brand-footer p {
+            font-size: 0.58rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            text-align: center;
+            line-height: 1.1;
+            margin: 0;
+        }
 
         .map-controls {
             position: fixed;
@@ -381,13 +387,12 @@
             background: var(--panel-bg) !important;
         }
 
-        /* Tablets / Android */
         @media (max-width: 768px) {
             .sidebar {
                 top: calc(var(--safe-top) + 10px);
                 left: calc(var(--safe-left) + 10px);
                 width: min(340px, calc(100vw - var(--safe-left) - var(--safe-right) - 20px));
-                height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 20px);
+                height: auto;
                 max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 20px);
                 border-radius: 18px;
             }
@@ -415,16 +420,16 @@
             }
 
             .sidebar-header {
-                padding: 24px 20px 18px;
+                padding: 24px 20px 16px;
             }
 
             .filter-tabs {
-                padding: 0 20px 16px;
+                padding: 0 20px 8px;
                 gap: 7px;
             }
 
             .legend-container {
-                padding: 0 20px 16px;
+                padding: 0 20px 8px;
             }
 
             .brand h1 {
@@ -446,22 +451,22 @@
             }
 
             .brand-footer {
-                padding: 24px 16px calc(20px + var(--safe-bottom));
-                min-height: 120px;
+                padding: 7px 8px calc(6px + var(--safe-bottom));
+                min-height: auto;
+                gap: 3px;
             }
 
             .brand-footer img {
-                max-width: 95px;
+                max-width: 68px;
             }
         }
 
-        /* Android pequeños */
         @media (max-width: 480px) {
             .sidebar {
                 top: calc(var(--safe-top) + 8px);
                 left: calc(var(--safe-left) + 8px);
                 width: min(300px, calc(100vw - var(--safe-left) - var(--safe-right) - 16px));
-                height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 16px);
+                height: auto;
                 max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 16px);
                 border-radius: 16px;
             }
@@ -527,7 +532,7 @@
             }
 
             .filter-tabs {
-                padding: 0 16px 14px;
+                padding: 0 16px 8px;
                 gap: 6px;
             }
 
@@ -537,7 +542,7 @@
             }
 
             .legend-container {
-                padding: 0 16px 14px;
+                padding: 0 16px 8px;
             }
 
             .legend-items {
@@ -551,21 +556,22 @@
 
             .section-title {
                 font-size: 0.75rem;
-                margin-bottom: 10px;
-            }
-
-            .brand-footer {
-                padding: 18px 12px calc(16px + var(--safe-bottom));
-                min-height: 100px;
-            }
-
-            .brand-footer img {
-                max-width: 84px;
                 margin-bottom: 8px;
             }
 
+            .brand-footer {
+                padding: 6px 8px calc(5px + var(--safe-bottom));
+                min-height: auto;
+                gap: 2px;
+            }
+
+            .brand-footer img {
+                max-width: 62px;
+                margin: 0;
+            }
+
             .brand-footer p {
-                font-size: 0.58rem;
+                font-size: 0.54rem;
             }
         }
 
@@ -793,48 +799,6 @@
             if (oldLayer) {
                 map.removeLayer(oldLayer);
             }
-        };
-
-        const renderAnalytics = (data) => {
-            const section = document.getElementById('analytics-section');
-            if (!section) return;
-
-            section.style.display = 'block';
-
-            const stats = { alta: 0, media: 0, baja: 0 };
-            data.forEach(a => stats[a.severity.toLowerCase()]++);
-
-            if (severityChart) severityChart.destroy();
-
-            const chartEl = document.getElementById('severityChart');
-            if (!chartEl) return;
-
-            const ctx = chartEl.getContext('2d');
-            severityChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Alta', 'Media', 'Baja'],
-                    datasets: [{
-                        data: [stats.alta, stats.media, stats.baja],
-                        backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
-                        borderWidth: 0,
-                        hoverOffset: 10
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: '#94a3b8',
-                                font: { family: 'Outfit', size: 10 }
-                            }
-                        }
-                    },
-                    cutout: '70%'
-                }
-            });
         };
 
         const updateStatus = (text) => {

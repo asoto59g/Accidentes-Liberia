@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Accidentes Viales - Liberia</title>
     
     <!-- SEO & Metadata -->
@@ -62,16 +62,24 @@
             font-family: 'Outfit', sans-serif;
         }
 
+        html, body {
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            min-height: 100vh;
+            min-height: 100dvh;
+        }
+
         body {
             background-color: var(--bg-body);
             color: var(--text-primary);
             overflow: hidden;
-            height: 100vh;
         }
 
         #map {
             width: 100vw;
             height: 100vh;
+            height: 100dvh;
             position: absolute;
             top: 0;
             left: 0;
@@ -85,6 +93,7 @@
             left: 20px;
             width: 400px;
             bottom: 20px;
+            max-height: calc(100dvh - 40px);
             background: var(--panel-bg);
             backdrop-filter: blur(var(--glass-blur));
             -webkit-backdrop-filter: blur(var(--glass-blur));
@@ -94,7 +103,7 @@
             display: flex;
             flex-direction: column;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            transition: transform 0.5s ease-in-out;
+            transition: transform 0.35s ease-in-out;
             overflow: hidden;
         }
 
@@ -460,56 +469,105 @@
             accent-color: var(--accent-primary);
         }
 
-        /* Responsive */
-        @media (max-width: 480px) {
+        /* Estado colapsado */
+        .sidebar.collapsed {
+            transform: translateX(calc(-100% - 24px));
+        }
+
+        /* Ajustes tablets y Android */
+        @media (max-width: 768px) {
             .sidebar {
-                width: calc(100% - 40px);
-                left: 20px;
-                top: auto;
-                height: 50vh;
-                bottom: 20px;
+                top: 12px;
+                left: 12px;
+                bottom: auto;
+                width: min(350px, calc(100vw - 24px));
+                max-height: calc(100dvh - 24px);
+                transform: translateY(-4px) scale(0.90);
+                transform-origin: top left;
+            }
+
+            .sidebar.collapsed {
+                transform: translateX(calc(-100% - 18px)) translateY(-4px) scale(0.90);
+            }
+
+            .map-controls {
+                top: 12px;
+                right: 12px;
+            }
+
+            #toggleSidebar {
+                top: 12px !important;
+                left: 12px !important;
             }
         }
-    
-/* Sidebar mobile improvements */
-.sidebar.collapsed {
-    transform: translateX(-110%);
-}
 
-@media (max-width: 768px) {
-    .sidebar {
-        transform: scale(0.85);
-        transform-origin: top left;
-    }
-}
+        /* Celulares pequeños */
+        @media (max-width: 480px) {
+            .sidebar {
+                top: 8px;
+                left: 8px;
+                bottom: auto;
+                width: min(315px, calc(100vw - 16px));
+                max-height: calc(100dvh - 16px);
+                transform: translateY(-2px) scale(0.86);
+                transform-origin: top left;
+                border-radius: 16px;
+            }
 
-</style>
+            .sidebar.collapsed {
+                transform: translateX(calc(-100% - 14px)) translateY(-2px) scale(0.86);
+            }
+
+            .sidebar-header {
+                padding: 24px 20px 18px;
+            }
+
+            .filter-tabs {
+                padding: 0 20px 16px;
+            }
+
+            .legend-container {
+                padding: 0 20px 16px;
+            }
+
+            .brand h1 {
+                font-size: 1.15rem;
+            }
+
+            .stat-val {
+                font-size: 1.4rem;
+            }
+
+            .btn-tab {
+                padding: 7px 12px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
 </head>
 <body>
 
     <div id="map"></div>
-<button id="toggleSidebar" style="
-position:absolute;
-top:20px;
-left:20px;
-z-index:200;
-width:44px;
-height:44px;
-border-radius:12px;
-border:1px solid rgba(255,255,255,0.1);
-background:rgba(15,23,42,0.75);
-backdrop-filter:blur(10px);
-color:white;
-cursor:pointer;
-display:flex;
-align-items:center;
-justify-content:center;
-">
-👁️
-</button>
 
+    <button id="toggleSidebar" style="
+        position:absolute;
+        top:20px;
+        left:20px;
+        z-index:200;
+        width:44px;
+        height:44px;
+        border-radius:12px;
+        border:1px solid rgba(255,255,255,0.1);
+        background:rgba(15,23,42,0.75);
+        backdrop-filter:blur(10px);
+        color:white;
+        cursor:pointer;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+    ">👁️</button>
 
-    <aside class="sidebar collapsed" id="sidebar">
+    <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
             <div class="brand">
                 <div class="brand-logo">
@@ -531,11 +589,7 @@ justify-content:center;
                     <span class="stat-lab">Graves</span>
                 </div>
             </div>
-
-
         </div>
-
-
 
         <div class="filter-tabs">
             <button class="btn-tab" data-filter="cosevi" data-year="2020">2020</button>
@@ -573,8 +627,6 @@ justify-content:center;
                 Fuente: SNIT / COSEVI
             </p>
         </div>
-
-
     </aside>
 
     <div class="map-controls">
@@ -628,7 +680,7 @@ justify-content:center;
         }
 
         const applyFilters = () => {
-            currentData = fullDataset.filter(d => activeSeverities[d.severity]);
+            const currentData = fullDataset.filter(d => activeSeverities[d.severity]);
             renderStats(currentData);
             renderList(currentData);
             renderMarkers(currentData);
@@ -661,7 +713,7 @@ justify-content:center;
 
             data.forEach(acc => {
                 const sevClass = acc.severity.toLowerCase();
-                let pulseClass = sevClass === 'alta' ? 'pulse-red' : (sevClass === 'media' ? 'pulse-yellow' : 'pulse-green');
+                const pulseClass = sevClass === 'alta' ? 'pulse-red' : (sevClass === 'media' ? 'pulse-yellow' : 'pulse-green');
                 
                 const icon = L.divIcon({
                     className: 'custom-icon',
@@ -684,6 +736,8 @@ justify-content:center;
 
         const renderAnalytics = (data) => {
             const section = document.getElementById('analytics-section');
+            if (!section) return;
+
             section.style.display = 'block';
             
             const stats = { alta: 0, media: 0, baja: 0 };
@@ -691,7 +745,10 @@ justify-content:center;
 
             if (severityChart) severityChart.destroy();
             
-            const ctx = document.getElementById('severityChart').getContext('2d');
+            const chartEl = document.getElementById('severityChart');
+            if (!chartEl) return;
+
+            const ctx = chartEl.getContext('2d');
             severityChart = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
@@ -715,6 +772,7 @@ justify-content:center;
 
         const updateStatus = (text) => {
             const badge = document.getElementById('status-badge');
+            if (!badge) return;
             badge.innerHTML = `<span class="sev-dot" style="background: var(--accent-primary); width: 8px; height: 8px;"></span><span>${text}</span>`;
         };
 
@@ -736,9 +794,12 @@ justify-content:center;
                         if (poi.mg >= 4) sev = 'Alta';
                         accidents.push({
                             id: `tt-${i}`,
-                            lat: poi.p.y, lng: poi.p.x,
-                            source: 'TomTom', severity: sev,
-                            date: new Date(), details: poi.d || 'Incidente de tráfico'
+                            lat: poi.p.y,
+                            lng: poi.p.x,
+                            source: 'TomTom',
+                            severity: sev,
+                            date: new Date(),
+                            details: poi.d || 'Incidente de tráfico'
                         });
                     });
                 }
@@ -754,13 +815,15 @@ justify-content:center;
                 const data = window[varName].features.map((f, i) => {
                     const p = f.properties;
                     if (!p.yorig_wgs84 || !p.xorig_wgs84) return null;
-                    let sev = (Number(p.muerto_sum) > 0 || Number(p.grave_sum) > 0) ? 'Alta' : (Number(p.leve_sum) > 0 ? 'Media' : 'Baja');
+                    const sev = (Number(p.muerto_sum) > 0 || Number(p.grave_sum) > 0) ? 'Alta' : (Number(p.leve_sum) > 0 ? 'Media' : 'Baja');
                     return {
-                        id: f.id || `cosevi_${year}_${i}`, 
-                        lat: parseFloat(p.yorig_wgs84), 
+                        id: f.id || `cosevi_${year}_${i}`,
+                        lat: parseFloat(p.yorig_wgs84),
                         lng: parseFloat(p.xorig_wgs84),
-                        source: `COSEVI ${year}`, severity: sev,
-                        date: year.toString(), details: `${p.tipoaccidente} (${p.nombredistrito})`
+                        source: `COSEVI ${year}`,
+                        severity: sev,
+                        date: year.toString(),
+                        details: `${p.tipoaccidente} (${p.nombredistrito})`
                     };
                 }).filter(d => d !== null);
                 updateUI(data, `COSEVI ${year} (Histórico)`);
@@ -775,13 +838,15 @@ justify-content:center;
                     const mapped = window[varName].features.map((f, i) => {
                         const p = f.properties;
                         if (!p.yorig_wgs84 || !p.xorig_wgs84) return null;
-                        let sev = (Number(p.muerto_sum) > 0 || Number(p.grave_sum) > 0) ? 'Alta' : (Number(p.leve_sum) > 0 ? 'Media' : 'Baja');
+                        const sev = (Number(p.muerto_sum) > 0 || Number(p.grave_sum) > 0) ? 'Alta' : (Number(p.leve_sum) > 0 ? 'Media' : 'Baja');
                         return {
-                            id: f.id || `cosevi_${y}_${i}`, 
-                            lat: parseFloat(p.yorig_wgs84), 
+                            id: f.id || `cosevi_${y}_${i}`,
+                            lat: parseFloat(p.yorig_wgs84),
                             lng: parseFloat(p.xorig_wgs84),
-                            source: `COSEVI ${y}`, severity: sev,
-                            date: y.toString(), details: `${p.tipoaccidente} (${p.nombredistrito})`
+                            source: `COSEVI ${y}`,
+                            severity: sev,
+                            date: y.toString(),
+                            details: `${p.tipoaccidente} (${p.nombredistrito})`
                         };
                     }).filter(d => d !== null);
                     all = all.concat(mapped);
@@ -792,7 +857,7 @@ justify-content:center;
 
         // Event Listeners
         document.querySelectorAll('.btn-tab').forEach(btn => {
-            btn.onclick = (e) => {
+            btn.onclick = () => {
                 document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 const filter = btn.dataset.filter;
@@ -809,14 +874,13 @@ justify-content:center;
             };
         });
 
-
-
         // Map Buttons
         document.getElementById('btn-zoom-in').onclick = () => map.zoomIn();
         document.getElementById('btn-zoom-out').onclick = () => map.zoomOut();
         document.getElementById('btn-locate').onclick = () => {
-            map.locate({setView: true, maxZoom: 16});
+            map.locate({ setView: true, maxZoom: 16 });
         };
+
         let currentBase = 'satellite';
         document.getElementById('btn-layers').onclick = () => {
             map.removeLayer(baseLayers[currentBase]);
@@ -824,24 +888,22 @@ justify-content:center;
             baseLayers[currentBase].addTo(map);
         };
 
-        
-// Toggle sidebar
-const toggleBtn = document.getElementById('toggleSidebar');
-const sidebar = document.getElementById('sidebar');
-let sidebarVisible = false;
+        // Toggle sidebar
+        const toggleBtn = document.getElementById('toggleSidebar');
+        const sidebar = document.getElementById('sidebar');
+        let sidebarVisible = true;
 
-toggleBtn.onclick = () => {
-    sidebarVisible = !sidebarVisible;
-    if (sidebarVisible) {
-        sidebar.classList.remove('collapsed');
-    } else {
-        sidebar.classList.add('collapsed');
-    }
-};
+        toggleBtn.onclick = () => {
+            sidebarVisible = !sidebarVisible;
+            if (sidebarVisible) {
+                sidebar.classList.remove('collapsed');
+            } else {
+                sidebar.classList.add('collapsed');
+            }
+        };
 
-// Initial Load
+        // Initial Load
         getCosevi('2024');
-
     </script>
 </body>
 </html>

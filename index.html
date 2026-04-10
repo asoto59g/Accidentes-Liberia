@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accidentes Viales - Liberia</title>
+    
+    <!-- SEO & Metadata -->
+    <meta name="description" content="Sistema de monitoreo y análisis de accidentes viales en Liberia, Guanacaste. Datos históricos 2020-2024.">
+    <meta name="author" content="ABC Geomática Agrícola">
+    
+    <!-- Social Media / Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Accidentes Viales - Liberia | ABC Geomática">
+    <meta property="og:description" content="Análisis geoespacial de siniestralidad vial en Liberia (2020-2024). Fuente: SNIT/COSEVI.">
+    <meta property="og:image" content="./preview.jpg">
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Accidentes Viales - Liberia">
+    <meta name="twitter:description" content="Análisis de accidentes viales en Liberia, Guanacaste. Visualización interactiva 2020-2024.">
+    <meta name="twitter:image" content="./preview.jpg">
+    
+    <!-- Fonts: Outfit for a premium feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        :root {
+            /* Premium Color Palette */
+            --bg-body: #0f172a;
+            --panel-bg: rgba(15, 23, 42, 0.75);
+            --panel-border: rgba(255, 255, 255, 0.1);
+            --accent-primary: #3b82f6;
+            --accent-secondary: #8b5cf6;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+            --info: #0ea5e9;
+            
+            --glass-blur: 16px;
+            --card-radius: 20px;
+            --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #map {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        /* Glassmorphic Sidebar */
+        .sidebar {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 400px;
+            bottom: 20px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border-radius: var(--card-radius);
+            border: 1px solid var(--panel-border);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            transition: transform 0.5s ease-in-out;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            padding: 32px 28px 24px;
+            background: linear-gradient(to bottom, rgba(255,255,255,0.03), transparent);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .brand-logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+        }
+
+        .brand h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Stats Section */
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            background: radial-gradient(circle at top right, rgba(255,255,255,0.05), transparent);
+        }
+
+        .stat-val {
+            font-size: 1.75rem;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .stat-lab {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+
+        /* Search & Filters */
+        .search-container {
+            position: relative;
+            margin: 0 28px 20px;
+        }
+
+        .search-input {
+            width: 100%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 12px 16px 12px 42px;
+            color: white;
+            font-size: 0.9rem;
+            outline: none;
+            transition: var(--transition-smooth);
+        }
+
+        .search-input:focus {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            width: 18px;
+            height: 18px;
+        }
+
+        .filter-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 0 28px 20px;
+        }
+
+        .filter-tabs::-webkit-scrollbar { display: none; }
+
+        .btn-tab {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--panel-border);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: var(--transition-smooth);
+        }
+
+        .btn-tab.active {
+            background: var(--accent-primary);
+            color: white;
+            border-color: var(--accent-primary);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Content Area */
+        .sidebar-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 28px 32px;
+            scrollbar-width: thin;
+            scrollbar-color: var(--panel-border) transparent;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar { width: 5px; }
+        .sidebar-scroll::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 10px; }
+
+        .section-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Analytics Chart */
+        .chart-box {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        /* Incident Items */
+        .incident-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .incident-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            position: relative;
+            animation: slideIn 0.5s ease backwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .incident-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--accent-primary);
+            transform: scale(1.02);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .source-tag {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 6px;
+            text-transform: uppercase;
+        }
+
+        .source-tag.tomtom { background: rgba(14, 165, 233, 0.15); color: var(--info); }
+        .source-tag.cosevi { background: rgba(139, 92, 246, 0.15); color: var(--accent-secondary); }
+
+        .card-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .card-details {
+            font-size: 0.95rem;
+            line-height: 1.5;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+        }
+
+        .card-footer {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .sev-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .sev-alta { background: var(--danger); box-shadow: 0 0 12px var(--danger); }
+        .sev-media { background: var(--warning); box-shadow: 0 0 12px var(--warning); }
+        .sev-baja { background: var(--success); box-shadow: 0 0 12px var(--success); }
+
+        /* Summary View */
+        .summary-card-large {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        /* Marker Styles */
+        .pulse-marker {
+            width: 16px;
+            height: 16px;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+        }
+
+        .pulse-red { 
+            background: var(--danger); 
+            border-color: var(--danger);
+            animation: pulse-danger 1.5s infinite; 
+        }
+        .pulse-yellow { 
+            background: var(--warning); 
+            border-color: var(--warning);
+        }
+        .pulse-green { 
+            background: var(--success); 
+            border-color: var(--success);
+        }
+
+        @keyframes pulse-danger {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
+        /* Floating Controls */
+        .map-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .map-btn {
+            width: 44px;
+            height: 44px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+        }
+
+        .map-btn:hover { background: var(--accent-primary); transform: translateX(-5px); }
+
+        /* Popup Styling */
+        .leaflet-popup-content-wrapper {
+            background: var(--panel-bg) !important;
+            backdrop-filter: blur(8px);
+            color: white !important;
+            border-radius: 16px !important;
+            border: 1px solid var(--panel-border);
+        }
+
+        .leaflet-popup-tip { background: var(--panel-bg) !important; }
+
+        /* Simbología / Legend */
+        .legend-container {
+            padding: 0 28px 20px;
+            margin-bottom: 8px;
+            border-bottom: 1px solid var(--panel-border);
+        }
+
+        .legend-items {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            padding: 6px 10px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid transparent;
+            transition: var(--transition-smooth);
+        }
+
+        .legend-item:hover {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--panel-border);
+        }
+
+        .legend-item input {
+            cursor: pointer;
+            accent-color: var(--accent-primary);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .sidebar {
+                width: calc(100% - 40px);
+                left: 20px;
+                top: auto;
+                height: 50vh;
+                bottom: 20px;
+            }
+        }
+    
+/* Sidebar mobile improvements */
+.sidebar.collapsed {
+    transform: translateX(-110%);
+}
+
+@media (max-width: 768px) {
+    .sidebar {
+        transform: scale(0.85);
+        transform-origin: top left;
+    }
+}
+
+</style>
+</head>
+<body>
+
+    <div id="map"></div>
+<button id="toggleSidebar" style="
+position:absolute;
+top:20px;
+left:20px;
+z-index:200;
+width:44px;
+height:44px;
+border-radius:12px;
+border:1px solid rgba(255,255,255,0.1);
+background:rgba(15,23,42,0.75);
+backdrop-filter:blur(10px);
+color:white;
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+">
+👁️
+</button>
+
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i data-lucide="shield-alert" style="color: white; width: 24px;"></i>
+                </div>
+                <div>
+                    <h1>Accidentes Viales</h1>
+                    <p style="font-size: 0.75rem; color: var(--text-muted)">Liberia, Guanacaste</p>
+                </div>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card">
+                    <span class="stat-val" id="total-val">0</span>
+                    <span class="stat-lab">Total</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-val" id="high-val" style="color: var(--danger)">0</span>
+                    <span class="stat-lab">Graves</span>
+                </div>
+            </div>
+
+
+        </div>
+
+
+
+        <div class="filter-tabs">
+            <button class="btn-tab" data-filter="cosevi" data-year="2020">2020</button>
+            <button class="btn-tab" data-filter="cosevi" data-year="2021">2021</button>
+            <button class="btn-tab" data-filter="cosevi" data-year="2022">2022</button>
+            <button class="btn-tab" data-filter="cosevi" data-year="2023">2023</button>
+            <button class="btn-tab active" data-filter="cosevi" data-year="2024">2024</button>
+            <button class="btn-tab" data-filter="cosevi-all">Todo</button>
+        </div>
+
+        <div class="legend-container">
+            <h2 class="section-title"><i data-lucide="layers-2" style="width: 14px;"></i> Simbología</h2>
+            <div class="legend-items">
+                <label class="legend-item">
+                    <input type="checkbox" checked data-severity="Alta">
+                    <span class="sev-dot sev-alta"></span>
+                    <span>Severa</span>
+                </label>
+                <label class="legend-item">
+                    <input type="checkbox" checked data-severity="Media">
+                    <span class="sev-dot sev-media"></span>
+                    <span>Media</span>
+                </label>
+                <label class="legend-item">
+                    <input type="checkbox" checked data-severity="Baja">
+                    <span class="sev-dot sev-baja"></span>
+                    <span>Baja</span>
+                </label>
+            </div>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px;">
+            <img src="./abcgeomatica-logo.png" alt="ABC Geomática" style="max-width: 120px; height: auto; opacity: 0.9; margin-bottom: 12px;">
+            <p style="font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; text-align: center;">
+                Fuente: SNIT / COSEVI
+            </p>
+        </div>
+
+
+    </aside>
+
+    <div class="map-controls">
+        <div class="map-btn" id="btn-zoom-in" title="Acercar"><i data-lucide="plus"></i></div>
+        <div class="map-btn" id="btn-zoom-out" title="Alejar"><i data-lucide="minus"></i></div>
+        <div class="map-btn" id="btn-locate" title="Mi Ubicación"><i data-lucide="navigation"></i></div>
+        <div class="map-btn" id="btn-layers" title="Cambiar Mapa"><i data-lucide="layers"></i></div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Data Sources -->
+    <script src="./aoi.js"></script>
+    <script src="./liberia_2020.js"></script>
+    <script src="./liberia_2021.js"></script>
+    <script src="./liberia_2022.js"></script>
+    <script src="./liberia_2023.js"></script>
+    <script src="./liberia_2024.js"></script>
+    
+    <script>
+        // Init Lucide
+        lucide.createIcons();
+
+        // Map Config
+        const map = L.map('map', {
+            zoomControl: false,
+            attributionControl: false
+        }).setView([10.635, -85.435], 13);
+
+        const baseLayers = {
+            satellite: L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20 }),
+            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 20 })
+        };
+        baseLayers.satellite.addTo(map);
+
+        const TOMTOM_KEY = 'TICK5HMcK7KPIiG5aYzcrUzJrWz9q4fk';
+        const BBOX = '-85.468,10.604,-85.405,10.668';
+        let activeSeverities = { 'Alta': true, 'Media': true, 'Baja': true };
+        let fullDataset = [];
+        let currentSource = 'COSEVI 2024';
+        let markers = [];
+        let severityChart = null;
+
+        // Overlay AOI
+        if (typeof AOI_DATA !== 'undefined') {
+            const aoi = L.geoJSON(AOI_DATA, {
+                style: { color: '#3b82f6', weight: 2, opacity: 0.6, fillOpacity: 0.05, dashArray: '8, 8' }
+            }).addTo(map);
+            map.fitBounds(aoi.getBounds());
+        }
+
+        const applyFilters = () => {
+            currentData = fullDataset.filter(d => activeSeverities[d.severity]);
+            renderStats(currentData);
+            renderList(currentData);
+            renderMarkers(currentData);
+            updateStatus(currentSource);
+            if (currentSource.includes('Consolidado')) {
+                // Analytics removed per user request
+            }
+        };
+
+        const updateUI = (data, sourceName) => {
+            fullDataset = data;
+            currentSource = sourceName;
+            applyFilters();
+        };
+
+        const renderStats = (data) => {
+            const total = data.length;
+            const high = data.filter(a => a.severity === 'Alta').length;
+            document.getElementById('total-val').innerText = total;
+            document.getElementById('high-val').innerText = high;
+        };
+
+        const renderList = (data, filterText = '') => {
+            // Element removed per user request
+        };
+
+        const renderMarkers = (data) => {
+            markers.forEach(m => map.removeLayer(m));
+            markers = [];
+
+            data.forEach(acc => {
+                const sevClass = acc.severity.toLowerCase();
+                let pulseClass = sevClass === 'alta' ? 'pulse-red' : (sevClass === 'media' ? 'pulse-yellow' : 'pulse-green');
+                
+                const icon = L.divIcon({
+                    className: 'custom-icon',
+                    html: `<div class="pulse-marker ${pulseClass}"></div>`,
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 10]
+                });
+
+                const m = L.marker([acc.lat, acc.lng], { icon, id: acc.id }).addTo(map);
+                m.bindPopup(`
+                    <div style="padding:4px">
+                        <h4 style="margin-bottom:8px">${acc.details}</h4>
+                        <p style="font-size:0.8rem; opacity:0.8">Fuente: ${acc.source}</p>
+                        <p style="font-size:0.8rem; opacity:0.8">Severidad: ${acc.severity}</p>
+                    </div>
+                `);
+                markers.push(m);
+            });
+        };
+
+        const renderAnalytics = (data) => {
+            const section = document.getElementById('analytics-section');
+            section.style.display = 'block';
+            
+            const stats = { alta: 0, media: 0, baja: 0 };
+            data.forEach(a => stats[a.severity.toLowerCase()]++);
+
+            if (severityChart) severityChart.destroy();
+            
+            const ctx = document.getElementById('severityChart').getContext('2d');
+            severityChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Alta', 'Media', 'Baja'],
+                    datasets: [{
+                        data: [stats.alta, stats.media, stats.baja],
+                        backgroundColor: ['#ef4444', '#f59e0b', '#10b981'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { color: '#94a3b8', font: { family: 'Outfit', size: 10 } } }
+                    },
+                    cutout: '70%'
+                }
+            });
+        };
+
+        const updateStatus = (text) => {
+            const badge = document.getElementById('status-badge');
+            badge.innerHTML = `<span class="sev-dot" style="background: var(--accent-primary); width: 8px; height: 8px;"></span><span>${text}</span>`;
+        };
+
+        const formatDate = (date) => {
+            if (typeof date === 'string') return date;
+            return date.toLocaleDateString('es-CR', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        };
+
+        // Data Fetching
+        async function getTomTom() {
+            try {
+                const res = await fetch(`https://api.tomtom.com/traffic/services/4/incidentDetails/s3/${BBOX}/12/-1/json?key=${TOMTOM_KEY}&language=es-ES`);
+                const data = await res.json();
+                const accidents = [];
+                if (data.tmpl?.[0]?.poi) {
+                    data.tmpl[0].poi.forEach((poi, i) => {
+                        let sev = 'Baja';
+                        if (poi.mg === 3) sev = 'Media';
+                        if (poi.mg >= 4) sev = 'Alta';
+                        accidents.push({
+                            id: `tt-${i}`,
+                            lat: poi.p.y, lng: poi.p.x,
+                            source: 'TomTom', severity: sev,
+                            date: new Date(), details: poi.d || 'Incidente de tráfico'
+                        });
+                    });
+                }
+                updateUI(accidents, 'TomTom Traffic (En Vivo)');
+            } catch (e) {
+                updateStatus('Error al conectar con TomTom');
+            }
+        }
+
+        const getCosevi = (year) => {
+            const varName = `COSEVI_DATA_${year}`;
+            if (window[varName]) {
+                const data = window[varName].features.map((f, i) => {
+                    const p = f.properties;
+                    if (!p.yorig_wgs84 || !p.xorig_wgs84) return null;
+                    let sev = (Number(p.muerto_sum) > 0 || Number(p.grave_sum) > 0) ? 'Alta' : (Number(p.leve_sum) > 0 ? 'Media' : 'Baja');
+                    return {
+                        id: f.id || `cosevi_${year}_${i}`, 
+                        lat: parseFloat(p.yorig_wgs84), 
+                        lng: parseFloat(p.xorig_wgs84),
+                        source: `COSEVI ${year}`, severity: sev,
+                        date: year.toString(), details: `${p.tipoaccidente} (${p.nombredistrito})`
+                    };
+                }).filter(d => d !== null);
+                updateUI(data, `COSEVI ${year} (Histórico)`);
+            }
+        };
+
+        const getAllCosevi = () => {
+            let all = [];
+            [2020, 2021, 2022, 2023, 2024].forEach(y => {
+                const varName = `COSEVI_DATA_${y}`;
+                if (window[varName]) {
+                    const mapped = window[varName].features.map((f, i) => {
+                        const p = f.properties;
+                        if (!p.yorig_wgs84 || !p.xorig_wgs84) return null;
+                        let sev = (Number(p.muerto_sum) > 0 || Number(p.grave_sum) > 0) ? 'Alta' : (Number(p.leve_sum) > 0 ? 'Media' : 'Baja');
+                        return {
+                            id: f.id || `cosevi_${y}_${i}`, 
+                            lat: parseFloat(p.yorig_wgs84), 
+                            lng: parseFloat(p.xorig_wgs84),
+                            source: `COSEVI ${y}`, severity: sev,
+                            date: y.toString(), details: `${p.tipoaccidente} (${p.nombredistrito})`
+                        };
+                    }).filter(d => d !== null);
+                    all = all.concat(mapped);
+                }
+            });
+            updateUI(all, 'Consolidado COSEVI 2020-2024');
+        };
+
+        // Event Listeners
+        document.querySelectorAll('.btn-tab').forEach(btn => {
+            btn.onclick = (e) => {
+                document.querySelectorAll('.btn-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const filter = btn.dataset.filter;
+                if (filter === 'cosevi') getCosevi(btn.dataset.year);
+                else if (filter === 'cosevi-all') getAllCosevi();
+            };
+        });
+
+        // Legend Listeners
+        document.querySelectorAll('.legend-item input').forEach(cb => {
+            cb.onchange = (e) => {
+                activeSeverities[e.target.dataset.severity] = e.target.checked;
+                applyFilters();
+            };
+        });
+
+
+
+        // Map Buttons
+        document.getElementById('btn-zoom-in').onclick = () => map.zoomIn();
+        document.getElementById('btn-zoom-out').onclick = () => map.zoomOut();
+        document.getElementById('btn-locate').onclick = () => {
+            map.locate({setView: true, maxZoom: 16});
+        };
+        let currentBase = 'satellite';
+        document.getElementById('btn-layers').onclick = () => {
+            map.removeLayer(baseLayers[currentBase]);
+            currentBase = currentBase === 'satellite' ? 'dark' : 'satellite';
+            baseLayers[currentBase].addTo(map);
+        };
+
+        
+// Toggle sidebar
+const toggleBtn = document.getElementById('toggleSidebar');
+const sidebar = document.getElementById('sidebar');
+let sidebarVisible = true;
+
+toggleBtn.onclick = () => {
+    sidebarVisible = !sidebarVisible;
+    if (sidebarVisible) {
+        sidebar.classList.remove('collapsed');
+    } else {
+        sidebar.classList.add('collapsed');
+    }
+};
+
+// Initial Load
+        getCosevi('2024');
+
+    </script>
+</body>
+</html>
